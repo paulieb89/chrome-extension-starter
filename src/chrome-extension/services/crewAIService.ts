@@ -1,10 +1,10 @@
-interface PageContent {
+export interface PageContent {
   title: string;
   url: string;
   content: string;
 }
 
-interface AnalysisResult {
+export interface AnalysisResult {
   summary?: string;
   error?: string;
 }
@@ -12,8 +12,7 @@ interface AnalysisResult {
 const API_URL = 'https://your-railway-url.railway.app'; // Replace with your Railway URL
 
 export async function analyzePageContent(
-  content: PageContent,
-  analysisType: string
+  content: PageContent
 ): Promise<AnalysisResult> {
   try {
     const response = await fetch(`${API_URL}/analyze/summarize`, {
@@ -34,13 +33,4 @@ export async function analyzePageContent(
     console.error('Error calling API:', error);
     throw error;
   }
-}
-
-// TODO: Implement these functions with actual Crew AI integration
-export async function createCrewAIAgent() {
-  // Will implement actual Crew AI agent creation
-}
-
-export async function runCrewAITask(agent: any, task: string) {
-  // Will implement actual Crew AI task execution
 }

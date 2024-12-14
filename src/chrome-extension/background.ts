@@ -3,22 +3,22 @@ import { analyzePageContent } from './services/crewAIService';
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'analyzePage') {
-    handlePageAnalysis(request.analysisType, sender.tab?.id)
+    handlePageAnalysis(sender.tab?.id)
       .then(sendResponse)
-      .catch(error => sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' }));
+      .catch(error => sendResponse({ error: error.message }));
     return true; // Will respond asynchronously
   }
 });
 
 // Handle page analysis request
-async function handlePageAnalysis(analysisType: string, tabId?: number) {
+async function handlePageAnalysis(tabId?: number) {
   if (!tabId) {
     throw new Error('No active tab found');
   }
 
   try {
     // Execute content script to get page content
-    const [scriptResult] = await chrome.scripting.executeScript({
+    const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
         // Get main content of the page
@@ -26,27 +26,27 @@ async function handlePageAnalysis(analysisType: string, tabId?: number) {
         const main = document.querySelector('main');
         const content = article || main || document.body;
         
+        if (!content) {
+          throw new Error('Could not find page content');
+        }
+
         return {
           title: document.title,
           url: window.location.href,
-          content: content.textContent || content.innerText || '',
-          metadata: {
-            description: document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
-            keywords: document.querySelector('meta[name="keywords"]')?.getAttribute('content') || ''
-          }
+          content: content.innerText
         };
       }
     });
 
-    if (!scriptResult || !scriptResult.result) {
+    if (!result) {
       throw new Error('Failed to extract page content');
     }
 
     // Analyze the content using Crew AI
-    const analysis = await analyzePageContent(scriptResult.result, analysisType);
+    const analysis = await analyzePageContent(result);
     return { success: true, data: analysis };
   } catch (error) {
     console.error('Error analyzing page:', error);
-    throw new Error(`Error analyzing page: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw error;
   }
 }
