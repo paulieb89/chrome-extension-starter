@@ -5,7 +5,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'analyzePage') {
     handlePageAnalysis(request.analysisType, sender.tab?.id)
       .then(sendResponse)
-      .catch(error => sendResponse({ error: error.message }));
+      .catch(error => sendResponse({ error: error instanceof Error ? error.message : 'Unknown error' }));
     return true; // Will respond asynchronously
   }
 });
@@ -18,7 +18,7 @@ async function handlePageAnalysis(analysisType: string, tabId?: number) {
 
   try {
     // Execute content script to get page content
-    const [{ result }] = await chrome.scripting.executeScript({
+    const [scriptResult] = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
         // Get main content of the page
@@ -29,7 +29,7 @@ async function handlePageAnalysis(analysisType: string, tabId?: number) {
         return {
           title: document.title,
           url: window.location.href,
-          content: content.innerText,
+          content: content.textContent || content.innerText || '',
           metadata: {
             description: document.querySelector('meta[name="description"]')?.getAttribute('content') || '',
             keywords: document.querySelector('meta[name="keywords"]')?.getAttribute('content') || ''
@@ -38,11 +38,15 @@ async function handlePageAnalysis(analysisType: string, tabId?: number) {
       }
     });
 
+    if (!scriptResult || !scriptResult.result) {
+      throw new Error('Failed to extract page content');
+    }
+
     // Analyze the content using Crew AI
-    const analysis = await analyzePageContent(result, analysisType);
+    const analysis = await analyzePageContent(scriptResult.result, analysisType);
     return { success: true, data: analysis };
   } catch (error) {
     console.error('Error analyzing page:', error);
-    throw error;
+    throw new Error(`Error analyzing page: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
