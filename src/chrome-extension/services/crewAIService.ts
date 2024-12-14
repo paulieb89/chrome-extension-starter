@@ -9,7 +9,7 @@ interface AnalysisResult {
   error?: string;
 }
 
-const API_URL = 'YOUR_RAILWAY_URL'; // We'll update this once deployed
+const API_URL = 'https://your-railway-url.railway.app'; // Replace with your Railway URL
 
 export async function analyzePageContent(
   content: PageContent,
