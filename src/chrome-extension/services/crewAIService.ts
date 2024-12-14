@@ -9,7 +9,7 @@ export interface AnalysisResult {
   error?: string;
 }
 
-const API_URL = 'https://your-railway-url.railway.app'; // Replace with your Railway URL
+const API_URL = 'https://chrome-extension-starter-production.up.railway.app'; // Replace with your Railway URL
 
 export async function analyzePageContent(
   content: PageContent
