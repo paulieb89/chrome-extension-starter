@@ -1,4 +1,8 @@
 chrome.runtime.onInstalled.addListener(() => {
+    console.log('Simple Crew Extension installed!');
+});
+
+chrome.runtime.onInstalled.addListener(() => {
     console.log("Crew AI Test Extension installed.");
 });
 
